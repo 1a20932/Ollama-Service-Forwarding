@@ -189,7 +189,14 @@ def ctask():
                 }
             }
     except:
-        return f"Error:请联系管理员：[email]{ae},[Phone]{ap},[QQ]{qq}"
+        return {
+            "code": 500,
+            "msg": "error:服务器内部错误",
+            "data": {
+                "status": "error",
+                "task": "error"
+            }
+        }
 
 @app.route('/get_task', methods=['GET','POST'])
 def gtask():
