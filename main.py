@@ -36,7 +36,8 @@ import requests
 import json
 import flask
 from flask_cors import CORS
-from os import system
+#from os import system
+from os import popen
 
 ap = 13518062036
 qq = 2295326064
@@ -128,13 +129,27 @@ class ETool:
                 FirstPsw += pwd[0]
         return sysr.choice(ls)
 #=======================================ETool========================================#
-task_list = []
 
-def run_command(context):
-    exec(_thread.start_new_thread( system, ("Thread-1", 2, "get_answer "+ context) ))
+def system(command):
+    # 定义命令模板，用 {} 占位符表示需要替换的内容
+    command_template = command
+
+    # 使用 os.popen() 执行命令并获取命令输出的文件对象
+    with popen(command_template) as process:
+        # 读取命令输出并返回
+        output = process.read().strip()
+
+    return output
+
+task_list = []
+run_data = {}
+def run_command(threadName, delay,task_id,content):
+    print('RUNNING'+threadName)
+    run_data[task_id] = system(f'get_answer {content}')
+    print('\n\n')
 
 # 定义创建任务函数
-def create_task():
+def create_task(content):
     # 创建随机数对象
     sysr = random.SystemRandom()
     # 创建当前任务
@@ -146,28 +161,70 @@ def create_task():
     else:
         # 否则将当前任务添加到任务列表中
         task_list.append(now_task)
+        run_data[now_task] = None
+        _thread.start_new_thread( run_command, ("Thread-"+now_task, 2, now_task, content) )#run_command(now_task,content)
+        return now_task
     
 
 @app.route('/ctask', methods=['GET','POST'])
-def CORS_API():
+def ctask():
     try:
         if request.method == "GET":
+            content = request.args.get('content')
             return {
                 "code": 200,
                 "msg": "success",
                 "data": {
                     "status": "ok",
-                    "task": task_list[-1]
+                    "task": create_task(content)
                 }
             }
         else:
-            m = request.json
-            url = m['url']
-            json = m['json']
-            requests.post(url,json=json)
+            return {
+                "code": 403,
+                "msg": "error:禁止用POST请求",
+                "data": {
+                    "status": "error",
+                    "task": "error"
+                }
+            }
     except:
         return f"Error:请联系管理员：[email]{ae},[Phone]{ap},[QQ]{qq}"
 
+@app.route('/get_task', methods=['GET','POST'])
+def gtask():
+    try:
+        if request.method == "GET":
+            task = request.args.get('task')
+            if run_data[task] != None:
+                return {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "status": "ok",
+                        "task": run_data[task]
+                    }
+                }
+            else:
+                return {
+                    "code": 404,
+                    "msg": "Task not found/Creating",
+                    "data": {
+                        "status": "error",
+                        "task": "error"
+                    }
+                }
+        else:
+            return {
+                "code": 403,
+                "msg": "error:禁止用POST请求",
+                "data": {
+                    "status": "error",
+                    "task": "error"
+                }
+            }
+    except:
+        return f"Error:请联系管理员：[email]{ae},[Phone]{ap},[QQ]{qq}"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8090)
