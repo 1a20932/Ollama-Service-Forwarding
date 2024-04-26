@@ -145,7 +145,7 @@ task_list = []
 run_data = {}
 def run_command(threadName, delay,task_id,content):
     print('RUNNING'+threadName)
-    run_data[task_id] = system(f'get_answer {content}')
+    run_data[task_id] = system(f'python get_answer.py {content}')
     print('\n\n')
 
 # 定义创建任务函数
@@ -231,7 +231,55 @@ def gtask():
                 }
             }
     except:
-        return f"Error:请联系管理员：[email]{ae},[Phone]{ap},[QQ]{qq}"
+        return {
+            "code": 500,
+            "msg": "error:服务器内部错误",
+            "data": {
+                "status": "error",
+                "task": "error"
+            }
+        }
+
+@app.route('/api/generate', methods=['GET','POST'])
+def gapi():
+    try:
+        if request.method == "GET":
+            prompt = request.args.get('prompt')
+            url = 'http://localhost:11434/api/generate'
+            payload = {"model": 'gemma', "prompt": prompt}
+            response = requests.post(url, json=payload)
+            print(response.text+'\n\n')
+            return response.json
+        else:
+            prompt = request.json["prompt"]
+            url = 'http://localhost:11434/api/generate'
+            payload = {"model": 'gemma', "prompt": prompt}
+            response = requests.post(url, json=payload)
+            print(response.text+'\n\n')
+            return response.text
+    except:
+        return {
+            "code": 500,
+            "msg": "error:服务器内部错误",
+            "data": {
+                "status": "error",
+                "task": "error"
+            }
+        }
+    
+@app.route('/', methods=['GET','POST'])
+def getSTATUS():
+    try:
+        return "Ollama is running"
+    except:
+        return {
+            "code": 500,
+            "msg": "error:服务器内部错误",
+            "data": {
+                "status": "error",
+                "task": "error"
+            }
+        }
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8090)
