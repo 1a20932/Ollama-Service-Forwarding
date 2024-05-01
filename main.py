@@ -247,13 +247,15 @@ def gapi():
             prompt = request.args.get('prompt')
             url = 'http://localhost:11434/api/generate'
             payload = {"model": 'gemma', "prompt": prompt}
+            print(f"Playload: "+str(payload)+"\n")
             response = requests.post(url, json=payload)
             print(response.text+'\n\n')
-            return response.json
+            return response.text
         else:
             prompt = request.json["prompt"]
             url = 'http://localhost:11434/api/generate'
             payload = {"model": 'gemma', "prompt": prompt}
+            print(f"Playload: "+str(payload)+"\n")
             response = requests.post(url, json=payload)
             print(response.text+'\n\n')
             return response.text
